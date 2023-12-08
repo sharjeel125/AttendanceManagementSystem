@@ -7,11 +7,20 @@ const QRScanner = ({ navigation }) => {
   const [scanned, setScanned] = useState(false);
 
   useEffect(() => {
-    (async () => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // do something - for example: reset states, ask for camera permission
+    //   setScanned(false);
+      setHasPermission(false);
+      (async () => {
       const { status } = await BarCodeScanner.requestPermissionsAsync();
-      setHasPermission(status === 'granted');
-    })();
-  }, []);
+      setHasPermission(status === "granted"); 
+      })();
+    });
+
+    // Return the function to unsubscribe from the event so it gets removed on unmount
+    return unsubscribe;
+  }, [navigation]);
+
 
   const handleBarCodeScanned = ({ type, data }) => {
     if (!scanned) {
@@ -27,6 +36,13 @@ const QRScanner = ({ navigation }) => {
     setHasPermission(status === 'granted');
     setScanned(false);
   };
+
+  // Reset the scanned state when the component unmounts
+  useEffect(() => {
+    return () => {
+      setScanned(false);
+    };
+  }, []);
 
   if (hasPermission === null) {
     return <Text>Requesting camera permission</Text>;
